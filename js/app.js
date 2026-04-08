@@ -2,13 +2,14 @@
 //  app.js — Lógica principal (async con Firebase)
 // ============================================================
 
+let registrosCacheados = [];
+let unsubscribeRegistros = null;
+
 window.onload = async function () {
   const usuario = JSON.parse(localStorage.getItem("usuario"));
 
   if (usuario) {
     mostrarApp(usuario);
-    await cargarHistorial();
-    await mostrarActividadActiva();
   }
 };
 
@@ -50,6 +51,23 @@ function mostrarApp(usuario) {
     `Hola, ${usuario.nombre} · Turno ${usuario.turno}`;
 
   mostrarReloj();
+  
+  // Iniciar listener de tiempo real para registros (0 lecturas después del inicial)
+  iniciarListenerRegistros();
+}
+
+function iniciarListenerRegistros() {
+  if (unsubscribeRegistros) unsubscribeRegistros();
+
+  unsubscribeRegistros = db.collection("registros").onSnapshot(
+    snapshot => {
+      registrosCacheados = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      cargarHistorial();
+      mostrarActividadActiva();
+    },
+    err => console.error("Error en listener registros:", err)
+  );
 }
 
 function mostrarReloj() {
@@ -76,9 +94,8 @@ async function iniciarActividad() {
   }
 
   const usuario   = JSON.parse(localStorage.getItem("usuario"));
-  const registros = await obtenerActividades();
 
-  const activa = registros.find(
+  const activa = registrosCacheados.find(
     r => r.status === "En proceso" && r.nombre === usuario.nombre
   );
 
@@ -105,8 +122,6 @@ async function iniciarActividad() {
 
   localStorage.setItem("actividadActualId", nueva.id);
   document.getElementById("estado").innerText = "Actividad en proceso...";
-
-  await mostrarActividadActiva();
 }
 
 /* ========================= */
@@ -115,9 +130,8 @@ async function iniciarActividad() {
 
 async function finalizarActividad() {
   const usuario   = JSON.parse(localStorage.getItem("usuario"));
-  const registros = await obtenerActividades();
 
-  const activa = registros.find(
+  const activa = registrosCacheados.find(
     r => r.status === "En proceso" && r.nombre === usuario.nombre
   );
 
@@ -225,6 +239,13 @@ function cerrarSesion() {
   localStorage.removeItem("actividadActualId");
 
   limpiarTimer();
+  
+  // Detener listener para ahorrar lecturas
+  if (unsubscribeRegistros) {
+    unsubscribeRegistros();
+    unsubscribeRegistros = null;
+  }
+  registrosCacheados = [];
 
   document.getElementById("app").style.display   = "none";
   document.getElementById("login").style.display = "block";
@@ -237,14 +258,15 @@ function cerrarSesion() {
 /* HISTORIAL                  */
 /* ========================= */
 
-async function cargarHistorial() {
+function cargarHistorial() {
   const usuario   = JSON.parse(localStorage.getItem("usuario"));
-  const registros = await obtenerActividades();
   const lista     = document.getElementById("historial");
+
+  if (!lista) return;
 
   lista.innerHTML = "";
 
-  registros
+  registrosCacheados
     .filter(r => r.nombre === usuario.nombre && r.status === "Finalizado")
     .sort((a, b) => new Date(b.fin) - new Date(a.fin))
     .forEach(r => {
@@ -259,17 +281,16 @@ async function cargarHistorial() {
 /* ACTIVIDAD ACTIVA           */
 /* ========================= */
 
-async function obtenerActividadActiva() {
-  const usuario   = JSON.parse(localStorage.getItem("usuario"));
-  const registros = await obtenerActividades();
+function obtenerActividadActiva() {
+  const usuario = JSON.parse(localStorage.getItem("usuario"));
 
-  return registros.find(
+  return registrosCacheados.find(
     r => r.nombre === usuario.nombre && r.status === "En proceso"
   );
 }
 
-async function mostrarActividadActiva() {
-  const activa = await obtenerActividadActiva();
+function mostrarActividadActiva() {
+  const activa = obtenerActividadActiva();
   const box    = document.getElementById("actividadActiva");
 
   if (!activa) {

@@ -3,9 +3,11 @@
 // ============================================================
 
 let registros        = [];
+let usuarios         = [];
 let filtroFechaInicio = null;
 let filtroFechaFin    = null;
 let unsubscribeListener = null;
+let unsubscribeUsuariosListener = null;
 
 /* ========================= */
 /* INIT                       */
@@ -26,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   iniciarListenerTiempoReal();
-  cargarUsuarios();
+  iniciarListenerUsuarios();
 });
 
 /* ========================= */
@@ -55,6 +57,20 @@ function iniciarListenerTiempoReal() {
   );
 }
 
+function iniciarListenerUsuarios() {
+  if (unsubscribeUsuariosListener) unsubscribeUsuariosListener();
+
+  unsubscribeUsuariosListener = db.collection("usuarios").onSnapshot(
+    snapshot => {
+      usuarios = snapshot.docs.map(doc => doc.data());
+      cargarUsuarios();
+    },
+    err => {
+      console.error("Error en listener usuarios:", err);
+    }
+  );
+}
+
 /* ========================= */
 /* TABLA                      */
 /* ========================= */
@@ -72,7 +88,7 @@ function renderTabla(data) {
       : "";
 
     tabla.innerHTML += `
-      <tr class="${claseNoExitoso}">
+      <tr class="${claseNoExitoso}" data-id="${r.id}">
         <td>${r.nombre}</td>
         <td>${r.actividad}</td>
         <td>${r.cart}</td>
@@ -85,6 +101,7 @@ function renderTabla(data) {
           ${r.comentario
             ? `<span title="${r.comentario}" class="btn-comentario">💬</span>`
             : ""}
+          <button onclick="editarRegistro('${r.id}')" class="btn-edit">✏️</button>
           <button onclick="eliminarRegistro('${r.id}')" class="btn-delete">🗑️</button>
         </td>
       </tr>
@@ -174,6 +191,91 @@ async function eliminarRegistro(id) {
 
   await eliminarActividad(id);
   // El listener onSnapshot actualizará la UI automáticamente
+}
+
+function editarRegistro(id) {
+  const row = document.querySelector(`tr[data-id="${id}"]`);
+  const r = registros.find(reg => reg.id === id);
+  if (!r || !row) return;
+
+  const actividades = obtenerUnicos(registros.map(reg => reg.actividad)).filter(Boolean);
+  const actividadOptions = actividades.map(act => `<option value="${act}" ${r.actividad === act ? 'selected' : ''}>${act}</option>`).join('');
+
+  row.innerHTML = `
+    <td><input type="text" value="${r.nombre}" id="edit_nombre_${id}"></td>
+    <td><select id="edit_actividad_${id}">${actividadOptions}</select></td>
+    <td><input type="text" value="${r.cart}" id="edit_cart_${id}"></td>
+    <td><input type="number" value="${r.cantidad}" id="edit_cantidad_${id}"></td>
+    <td><input type="datetime-local" value="${formatearDatetimeLocal(r.inicio)}" id="edit_inicio_${id}"></td>
+    <td><input type="datetime-local" value="${r.fin ? formatearDatetimeLocal(r.fin) : ''}" id="edit_fin_${id}"></td>
+    <td>
+      <select id="edit_status_${id}" onchange="toggleExitoso('${id}')">
+        <option value="En proceso" ${r.status === 'En proceso' ? 'selected' : ''}>En proceso</option>
+        <option value="Finalizado" ${r.status === 'Finalizado' ? 'selected' : ''}>Finalizado</option>
+      </select>
+      <div id="exitoso_container_${id}" style="margin-top: 5px;">
+        ${r.status === 'Finalizado' ? `<label><input type="checkbox" id="edit_exitoso_${id}" ${r.exitoso ? 'checked' : ''}> Éxito</label>` : ''}
+      </div>
+    </td>
+    <td>${calcularTiempo(r.inicio, r.fin)}</td>
+    <td>
+      <button onclick="guardarEdicion('${id}')" class="btn-save">💾</button>
+      <button onclick="cancelarEdicion('${id}')" class="btn-cancel">❌</button>
+    </td>
+  `;
+}
+
+function toggleExitoso(id) {
+  const statusSelect = document.getElementById(`edit_status_${id}`);
+  const container = document.getElementById(`exitoso_container_${id}`);
+  if (statusSelect.value === 'Finalizado') {
+    container.innerHTML = `<label><input type="checkbox" id="edit_exitoso_${id}"> Éxito</label>`;
+  } else {
+    container.innerHTML = '';
+  }
+}
+
+async function guardarEdicion(id) {
+  const nombre = document.getElementById(`edit_nombre_${id}`).value;
+  const actividad = document.getElementById(`edit_actividad_${id}`).value;
+  const cart = document.getElementById(`edit_cart_${id}`).value;
+  const cantidad = parseInt(document.getElementById(`edit_cantidad_${id}`).value);
+  const inicio = document.getElementById(`edit_inicio_${id}`).value.replace('T', ' ');
+  const finInput = document.getElementById(`edit_fin_${id}`).value;
+  const fin = finInput ? finInput.replace('T', ' ') : null;
+  const status = document.getElementById(`edit_status_${id}`).value;
+  const exitosoEl = document.getElementById(`edit_exitoso_${id}`);
+  const exitoso = exitosoEl ? exitosoEl.checked : null;
+
+  const cambios = {
+    nombre,
+    actividad,
+    cart,
+    cantidad,
+    inicio,
+    fin,
+    status,
+    ...(status === 'Finalizado' ? { exitoso } : { exitoso: null })
+  };
+
+  try {
+    await actualizarActividad(id, cambios);
+    // El listener actualizará la UI
+  } catch (err) {
+    alert("Error al guardar cambios: " + err.message);
+  }
+}
+
+function cancelarEdicion(id) {
+  // Re-render the table to cancel edit
+  const filtrados = registros.filter(r => {
+    const fechaFin = r.fin ? new Date(r.fin) : null;
+    return (
+      (!filtroFechaInicio || !fechaFin || fechaFin >= filtroFechaInicio) &&
+      (!filtroFechaFin || !fechaFin || fechaFin <= filtroFechaFin)
+    );
+  });
+  renderTabla(filtrados);
 }
 
 /* ========================= */
@@ -307,14 +409,20 @@ function renderUPH(data) {
 
   tabla.innerHTML = "";
   rows.forEach(row => {
-    const cols = row.horas.map(v => `<td>${v || ""}</td>`).join("");
+    const cols = row.horas.map(v => {
+      let clase = '';
+      if (v > 90) clase = 'uph-high';
+      else if (v < 90 && v > 0) clase = 'uph-low';
+      return `<td class="${clase}">${v || ""}</td>`;
+    }).join("");
+    const totalClase = row.total > 90 ? 'uph-high' : (row.total < 90 && row.total > 0 ? 'uph-low' : '');
     tabla.innerHTML += `
       <tr>
         <td>${row.nombre}</td>
         <td>${row.actividad}</td>
         <td>${row.turno}</td>
         ${cols}
-        <td><strong>${row.total}</strong></td>
+        <td class="${totalClase}"><strong>${row.total}</strong></td>
       </tr>
     `;
   });
@@ -358,7 +466,7 @@ async function crearUsuario() {
   if (!ok) return;
 
   limpiarFormularioUsuario();
-  await cargarUsuarios();
+  // El listener de usuarios se actualizará automáticamente
 }
 
 function limpiarFormularioUsuario() {
@@ -367,16 +475,16 @@ function limpiarFormularioUsuario() {
   document.getElementById("u_turno").value    = "";
 }
 
-async function cargarUsuarios() {
+function cargarUsuarios() {
   const search   = (document.getElementById("u_search")?.value || "").trim().toLowerCase();
-  const usuarios = (await obtenerUsuarios()).filter(u =>
+  const usuariosFiltr = usuarios.filter(u =>
     !search || `${u.username} ${u.nombre}`.toLowerCase().includes(search)
   );
   const tabla = document.getElementById("tablaUsuarios");
   if (!tabla) return;
 
   tabla.innerHTML = "";
-  usuarios.forEach(u => {
+  usuariosFiltr.forEach(u => {
     tabla.innerHTML += `
       <tr>
         <td>${u.username}</td>
@@ -507,6 +615,12 @@ function formatearFecha(fecha) {
 function formatearSoloFecha(fecha) {
   const d = new Date(fecha);
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
+function formatearDatetimeLocal(fecha) {
+  const d = new Date(fecha);
+  if (isNaN(d.getTime())) return "";
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 function obtenerFechaTurno(fecha) {

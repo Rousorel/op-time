@@ -316,6 +316,7 @@ body {
   display: flex;
   gap: 14px;
   padding-bottom: 4px;
+  justify-content: center;
 }
 
 .kpi-card {
@@ -332,6 +333,18 @@ body {
 .kpi-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0,0,0,0.10);
+}
+
+/* Resaltar EMPAQUE como proceso final */
+.kpi-card:nth-child(3) {
+  border-color: var(--success);
+  border-width: 2px;
+  background: linear-gradient(135deg, var(--success-bg) 0%, var(--surface) 100%);
+  box-shadow: 0 4px 12px rgba(21, 128, 61, 0.15);
+}
+
+.kpi-card:nth-child(3) h3 {
+  color: var(--success);
 }
 
 .kpi-card h3 {
@@ -462,6 +475,18 @@ body {
   background: #eff6ff;
 }
 
+.uph-high {
+  background-color: var(--success-bg);
+  color: var(--success);
+  font-weight: bold;
+}
+
+.uph-low {
+  background-color: var(--danger-soft);
+  color: var(--danger);
+  font-weight: bold;
+}
+
 /* ========================= */
 /* TABLA PRINCIPAL            */
 /* ========================= */
@@ -577,6 +602,59 @@ tbody tr.row-no-exitoso td {
 }
 
 .btn-delete:hover {
+  background: var(--danger);
+  color: white;
+  border-color: var(--danger);
+}
+
+.btn-edit {
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  color: #92400e;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+  margin-right: 4px;
+}
+
+.btn-edit:hover {
+  background: #fbbf24;
+  color: white;
+  border-color: #f59e0b;
+}
+
+.btn-save {
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  color: var(--success);
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+  margin-right: 4px;
+}
+
+.btn-save:hover {
+  background: var(--success);
+  color: white;
+  border-color: var(--success);
+}
+
+.btn-cancel {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: var(--danger);
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+
+.btn-cancel:hover {
   background: var(--danger);
   color: white;
   border-color: var(--danger);
