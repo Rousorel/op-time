@@ -1,0 +1,432 @@
+/* ============================================================
+   style.css — VAS Tracker (index)
+   ============================================================ */
+
+:root {
+  --bg:            #f0f2f5;
+  --surface:       #ffffff;
+  --border:        #e2e8f0;
+  --text-primary:  #1a202c;
+  --text-secondary:#64748b;
+  --accent:        #1d4ed8;
+  --accent-hover:  #1e40af;
+  --success:       #15803d;
+  --success-bg:    #dcfce7;
+  --success-border:#86efac;
+  --warning-bg:    #fef9c3;
+  --warning-border:#fde047;
+  --warning-text:  #854d0e;
+  --danger:        #dc2626;
+  --danger-hover:  #b91c1c;
+  --radius:        10px;
+  --shadow:        0 4px 16px rgba(0,0,0,0.08);
+  --font:          'IBM Plex Sans', sans-serif;
+}
+
+/* ========================= */
+/* BASE                       */
+/* ========================= */
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  margin: 0;
+  min-height: 100vh;
+}
+
+/* ========================= */
+/* CONTAINER                  */
+/* ========================= */
+
+.container {
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+/* ========================= */
+/* CARD                       */
+/* ========================= */
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+/* ========================= */
+/* LOGIN                      */
+/* ========================= */
+
+.login-logo {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.login-logo .logo-icon {
+  font-size: 40px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.login-logo h2 {
+  margin: 0 0 4px;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.login-logo p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* ========================= */
+/* HEADER                     */
+/* ========================= */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ========================= */
+/* LOGOUT                     */
+/* ========================= */
+
+.logout {
+  background: transparent;
+  color: var(--danger);
+  font-size: 12px;
+  font-family: var(--font);
+  font-weight: 500;
+  padding: 4px 10px;
+  border: 1px solid var(--danger);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex: none;
+}
+
+.logout:hover {
+  background: var(--danger);
+  color: white;
+}
+
+/* ========================= */
+/* BLOQUES                    */
+/* ========================= */
+
+.bloque {
+  margin-top: 18px;
+}
+
+h2, h3 {
+  margin: 0 0 10px;
+  color: var(--text-primary);
+}
+
+h3 {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+/* ========================= */
+/* INPUTS & SELECT            */
+/* ========================= */
+
+input, select, textarea {
+  width: 100%;
+  padding: 11px 14px;
+  margin-top: 8px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  font-size: 14px;
+  font-family: var(--font);
+  color: var(--text-primary);
+  background: var(--surface);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
+}
+
+/* ========================= */
+/* BOTONES                    */
+/* ========================= */
+
+.buttons {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+}
+
+button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  font-family: var(--font);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  background: var(--accent);
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+.btnLogin {
+  width: 100%;
+  margin-top: 14px;
+  padding: 13px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: var(--font);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  flex: none;
+}
+
+.btnLogin:hover {
+  background: var(--accent-hover);
+}
+
+/* INICIAR */
+#btnInicio {
+  background: var(--accent);
+}
+
+#btnInicio:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+#btnInicio:disabled {
+  background: #bfdbfe;
+  cursor: not-allowed;
+}
+
+/* FINALIZAR */
+#btnFin {
+  background: var(--success);
+}
+
+#btnFin:hover:not(:disabled) {
+  background: #166534;
+}
+
+#btnFin:disabled {
+  background: #86efac;
+  cursor: not-allowed;
+}
+
+/* ========================= */
+/* ACTIVIDAD ACTIVA           */
+/* ========================= */
+
+.actividad-activa {
+  background: var(--warning-bg);
+  border: 1.5px solid var(--warning-border);
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.actividad-activa h3 {
+  color: var(--warning-text);
+  margin-bottom: 10px;
+}
+
+.actividad-activa p {
+  margin: 5px 0;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+#act_timer {
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--warning-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ========================= */
+/* HISTORIAL                  */
+/* ========================= */
+
+#historial {
+  list-style: none;
+  padding: 0;
+  margin-top: 10px;
+}
+
+#historial li {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+/* ========================= */
+/* ESTADO                     */
+/* ========================= */
+
+#estado {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ========================= */
+/* MODAL                      */
+/* ========================= */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: var(--surface);
+  padding: 28px;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+}
+
+.modal-content h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-primary);
+}
+
+.modal-content p {
+  margin: 0 0 16px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.comentario-container {
+  margin: 16px 0;
+  text-align: left;
+}
+
+.comentario-container.hidden {
+  display: none;
+}
+
+.comentario-container label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modal-buttons button {
+  flex: 1;
+  padding: 12px;
+  font-weight: 700;
+}
+
+.btn-si {
+  background: var(--success);
+}
+
+.btn-si:hover:not(:disabled) {
+  background: #166534;
+}
+
+.btn-si:disabled {
+  background: #86efac;
+  cursor: not-allowed;
+}
+
+.btn-no {
+  background: var(--danger);
+}
+
+.btn-no:hover:not(:disabled) {
+  background: var(--danger-hover);
+}
+
+.btn-no:disabled {
+  background: #fca5a5;
+  cursor: not-allowed;
+}
+
+.btn-confirmar {
+  background: var(--accent);
+}
+
+.btn-confirmar:hover {
+  background: var(--accent-hover);
+}
+
+.btn-confirmar.hidden {
+  display: none;
+}
+
+/* ========================= */
+/* UTILITY                    */
+/* ========================= */
+
+.hidden {
+  display: none !important;
+}

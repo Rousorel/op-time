@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard — VAS Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<div class="topbar">
+  <span class="topbar-title">⚡ VAS Tracker — Dashboard</span>
+  <span class="topbar-live"><span class="live-dot"></span> En vivo</span>
+</div>
+
+<div class="container">
+
+  <div class="filtro-fecha">
+    <label>Fecha inicio:</label>
+    <input type="date" id="fecha_inicio">
+    <label>Fecha fin:</label>
+    <input type="date" id="fecha_fin">
+    <button onclick="aplicarFiltroFecha()">Aplicar</button>
+    <button onclick="limpiarFiltroFecha()" class="btn-secondary">Limpiar</button>
+  </div>
+
+  <div class="panel-controls">
+    <button class="toggle-users-btn" onclick="toggleUsuarios()">Mostrar usuarios</button>
+    <button class="toggle-kpi-btn"   onclick="toggleKPI()">Ocultar KPI</button>
+  </div>
+
+  <!-- PANEL USUARIOS (OCULTO POR DEFECTO) -->
+  <div id="usuariosPanel" class="usuarios-section hidden">
+    <h3>Gestión de Usuarios</h3>
+
+    <div class="usuarios-busqueda">
+      <input type="text" id="u_search" placeholder="Buscar usuario o nombre" oninput="filtrarUsuarios()">
+    </div>
+
+    <div class="form-usuario">
+      <input type="text"   id="u_username" placeholder="Usuario">
+      <input type="text"   id="u_nombre"   placeholder="Nombre">
+      <select id="u_turno">
+        <option value="">Turno</option>
+        <option>A</option><option>B</option><option>C</option><option>D</option>
+      </select>
+      <button onclick="crearUsuario()">+ Agregar</button>
+    </div>
+
+    <table class="tabla-usuarios">
+      <thead>
+        <tr>
+          <th>Usuario</th><th>Nombre</th><th>Turno</th><th>Acción</th>
+        </tr>
+      </thead>
+      <tbody id="tablaUsuarios"></tbody>
+    </table>
+  </div>
+
+  <!-- KPI POR ACTIVIDAD -->
+  <div id="kpiSection">
+    <div class="kpi-scroll">
+      <div class="kpi-grid">
+
+        <div class="kpi-card">
+          <h3>CONSOLIDACION</h3>
+          <div class="kpi-box-row">
+            <div class="kpi-box proceso">
+              <span>En proceso</span>
+              <p id="consol_proceso">0</p>
+            </div>
+            <div class="kpi-box personas">
+              <span>Personas activas</span>
+              <p id="consol_personas">0</p>
+            </div>
+          </div>
+          <div class="kpi-box final">
+            <span>Finalizadas</span>
+            <p id="consol_final">0</p>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <h3>VAS</h3>
+          <div class="kpi-box-row">
+            <div class="kpi-box proceso">
+              <span>En proceso</span>
+              <p id="vas_proceso">0</p>
+            </div>
+            <div class="kpi-box personas">
+              <span>Personas activas</span>
+              <p id="vas_personas">0</p>
+            </div>
+          </div>
+          <div class="kpi-box final">
+            <span>Finalizadas</span>
+            <p id="vas_final">0</p>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <h3>EMPAQUE</h3>
+          <div class="kpi-box-row">
+            <div class="kpi-box proceso">
+              <span>En proceso</span>
+              <p id="empaque_proceso">0</p>
+            </div>
+            <div class="kpi-box personas">
+              <span>Personas activas</span>
+              <p id="empaque_personas">0</p>
+            </div>
+          </div>
+          <div class="kpi-box final">
+            <span>Finalizadas</span>
+            <p id="empaque_final">0</p>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <h3>ETIQUETADO MANUAL</h3>
+          <div class="kpi-box-row">
+            <div class="kpi-box proceso">
+              <span>En proceso</span>
+              <p id="etiquetado_proceso">0</p>
+            </div>
+            <div class="kpi-box personas">
+              <span>Personas activas</span>
+              <p id="etiquetado_personas">0</p>
+            </div>
+          </div>
+          <div class="kpi-box final">
+            <span>Finalizadas</span>
+            <p id="etiquetado_final">0</p>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <h3>DECASING</h3>
+          <div class="kpi-box-row">
+            <div class="kpi-box proceso">
+              <span>En proceso</span>
+              <p id="decasing_proceso">0</p>
+            </div>
+            <div class="kpi-box personas">
+              <span>Personas activas</span>
+              <p id="decasing_personas">0</p>
+            </div>
+          </div>
+          <div class="kpi-box final">
+            <span>Finalizadas</span>
+            <p id="decasing_final">0</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- UPH POR USUARIO -->
+  <div id="uphSection" class="uph-section">
+    <div class="uph-header">
+      <h3>UPH por usuario</h3>
+      <div class="uph-filters">
+        <select id="uph_turno" onchange="actualizarUPH()">
+          <option value="">Todos los turnos</option>
+          <option value="A">Turno A</option>
+          <option value="B">Turno B</option>
+          <option value="C">Turno C</option>
+          <option value="D">Turno D</option>
+        </select>
+        <select id="uph_actividad" onchange="actualizarUPH()">
+          <option value="">Todas las actividades</option>
+        </select>
+        <input id="uph_search" type="text" placeholder="Buscar usuario" oninput="actualizarUPH()">
+      </div>
+    </div>
+    <div class="uph-table-wrap">
+      <table class="tabla-uph">
+        <thead><tr id="uphHeaderRow"></tr></thead>
+        <tbody id="tablaUPH"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TABLA PRINCIPAL -->
+  <div class="tabla-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre<br><select id="f_nombre"    onchange="filtrar()"></select></th>
+          <th>Actividad<br><select id="f_actividad" onchange="filtrar()"></select></th>
+          <th>Cart<br><select id="f_cart"       onchange="filtrar()"></select></th>
+          <th>Cantidad<br><select id="f_cantidad"  onchange="filtrar()"></select></th>
+          <th>Inicio<br><select id="f_inicio"    onchange="filtrar()"></select></th>
+          <th>Fin<br><select id="f_fin"         onchange="filtrar()"></select></th>
+          <th>Status<br><select id="f_status"    onchange="filtrar()"></select></th>
+          <th>Tiempo</th>
+          <th>Acciones<br>
+            <button onclick="exportarCSV()" class="btn-export">↓ Excel</button>
+          </th>
+        </tr>
+      </thead>
+      <tbody id="tabla"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- Firebase SDK (compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<!-- App scripts -->
+<script src="js/firebase-config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/usuarios.js"></script>
+<script src="js/admin.js"></script>
+
+</body>
+</html>
