@@ -82,13 +82,65 @@ async function actualizarDatosFinalizados() {
       .where("fin", "<=", finISO)
       .orderBy("fin");
 
-    const snapshot = await queryFinalizados.get();
-    registrosFinalizados = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const snapshotISO = await queryFinalizados.get();
+    const mapaFinalizados = new Map(
+      snapshotISO.docs.map(doc => [doc.id, { id: doc.id, ...doc.data() }])
+    );
+
+    // Compatibilidad con registros legacy guardados como "YYYY-MM-DD HH:mm:ss".
+    // Mantiene lecturas bajas: para el caso normal (1 dia), agrega solo 1 query extra.
+    const diasConsulta = obtenerDiasEnRango(inicio, fin, 7);
+    const legacySnapshots = await Promise.all(
+      diasConsulta.map(dia => {
+        const inicioLegacy = `${dia} 00:00:00`;
+        const finLegacy = `${dia} 23:59:59`;
+
+        return db.collection("registros")
+          .where("status", "==", "Finalizado")
+          .where("fin", ">=", inicioLegacy)
+          .where("fin", "<=", finLegacy)
+          .orderBy("fin")
+          .get();
+      })
+    );
+
+    legacySnapshots.forEach(snap => {
+      snap.docs.forEach(doc => {
+        if (!mapaFinalizados.has(doc.id)) {
+          mapaFinalizados.set(doc.id, { id: doc.id, ...doc.data() });
+        }
+      });
+    });
+
+    registrosFinalizados = Array.from(mapaFinalizados.values()).sort((a, b) => {
+      const fechaA = new Date(a.fin).getTime();
+      const fechaB = new Date(b.fin).getTime();
+      return fechaA - fechaB;
+    });
     registros = [...registrosActivos, ...registrosFinalizados];
     actualizarVistaAdmin();
   } catch (err) {
     console.error("Error al cargar registros finalizados:", err);
   }
+}
+
+function obtenerDiasEnRango(inicio, fin, maxDias = 7) {
+  const dias = [];
+
+  const actual = new Date(inicio);
+  actual.setHours(0, 0, 0, 0);
+
+  const limite = new Date(fin);
+  limite.setHours(0, 0, 0, 0);
+
+  let contador = 0;
+  while (actual <= limite && contador < maxDias) {
+    dias.push(formatearSoloFecha(actual));
+    actual.setDate(actual.getDate() + 1);
+    contador += 1;
+  }
+
+  return dias;
 }
 
 async function cargarUsuariosFirestore() {
@@ -295,9 +347,10 @@ async function guardarEdicion(id) {
   const actividad = document.getElementById(`edit_actividad_${id}`).value;
   const cart = document.getElementById(`edit_cart_${id}`).value;
   const cantidad = parseInt(document.getElementById(`edit_cantidad_${id}`).value);
-  const inicio = document.getElementById(`edit_inicio_${id}`).value.replace('T', ' ');
+  const inicioInput = document.getElementById(`edit_inicio_${id}`).value;
+  const inicio = inicioInput ? new Date(inicioInput).toISOString() : null;
   const finInput = document.getElementById(`edit_fin_${id}`).value;
-  const fin = finInput ? finInput.replace('T', ' ') : null;
+  const fin = finInput ? new Date(finInput).toISOString() : null;
   const status = document.getElementById(`edit_status_${id}`).value;
   const exitosoEl = document.getElementById(`edit_exitoso_${id}`);
   const exitoso = exitosoEl ? exitosoEl.checked : null;
@@ -315,7 +368,16 @@ async function guardarEdicion(id) {
 
   try {
     await actualizarActividad(id, cambios);
-    // El listener actualizará la UI
+    const aplicarCambios = arr => {
+      const index = arr.findIndex(reg => reg.id === id);
+      if (index !== -1) arr[index] = { ...arr[index], ...cambios };
+    };
+
+    aplicarCambios(registros);
+    aplicarCambios(registrosActivos);
+    aplicarCambios(registrosFinalizados);
+
+    actualizarVistaAdmin();
   } catch (err) {
     alert("Error al guardar cambios: " + err.message);
   }
