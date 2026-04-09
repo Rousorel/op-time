@@ -9,7 +9,6 @@ let filtroFechaFin    = null;
 let registrosActivos  = [];
 let registrosFinalizados = [];
 let unsubscribeListenerActivos = null;
-let unsubscribeListenerRango   = null;
 
 /* ========================= */
 /* INIT                       */
@@ -43,39 +42,14 @@ function obtenerRangoConsulta() {
   }
 
   const hoy = new Date();
-  const haceDosDias = new Date(hoy);
-  haceDosDias.setDate(hoy.getDate() - 2);
-
   return {
-    inicio: new Date(haceDosDias.getFullYear(), haceDosDias.getMonth(), haceDosDias.getDate(), 0, 0, 0, 0),
+    inicio: new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 0, 0, 0, 0),
     fin:    new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59, 999)
   };
 }
 
-function iniciarListenerTiempoReal() {
+async function iniciarListenerTiempoReal() {
   if (unsubscribeListenerActivos) unsubscribeListenerActivos();
-  if (unsubscribeListenerRango) unsubscribeListenerRango();
-
-  const { inicio, fin } = obtenerRangoConsulta();
-  const inicioISO = inicio.toISOString();
-  const finISO    = fin.toISOString();
-
-  const queryFinalizados = db.collection("registros")
-    .where("status", "==", "Finalizado")
-    .where("fin", ">=", inicioISO)
-    .where("fin", "<=", finISO)
-    .orderBy("fin");
-
-  unsubscribeListenerRango = queryFinalizados.onSnapshot(
-    snapshot => {
-      registrosFinalizados = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      registros = [...registrosActivos, ...registrosFinalizados];
-      actualizarVistaAdmin();
-    },
-    err => {
-      console.error("Error en listener Firestore:", err);
-    }
-  );
 
   const queryActivos = db.collection("registros")
     .where("status", "==", "En proceso");
@@ -92,6 +66,30 @@ function iniciarListenerTiempoReal() {
   );
 }
 
+async function actualizarDatosFinalizados() {
+  const { inicio, fin } = obtenerRangoConsulta();
+  const inicioISO = inicio.toISOString();
+  const finISO    = fin.toISOString();
+
+  registrosFinalizados = [];
+  actualizarVistaAdmin();
+
+  try {
+    const queryFinalizados = db.collection("registros")
+      .where("status", "==", "Finalizado")
+      .where("fin", ">=", inicioISO)
+      .where("fin", "<=", finISO)
+      .orderBy("fin");
+
+    const snapshot = await queryFinalizados.get();
+    registrosFinalizados = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    registros = [...registrosActivos, ...registrosFinalizados];
+    actualizarVistaAdmin();
+  } catch (err) {
+    console.error("Error al cargar registros finalizados:", err);
+  }
+}
+
 async function cargarUsuariosFirestore() {
   try {
     usuarios = await obtenerUsuarios();
@@ -106,19 +104,25 @@ function actualizarVistaAdmin() {
   llenarFiltros(registros);
   filtrar();
   actualizarUPH();
-  actualizarEtiquetaRango();
+  actualizarEstadoCarga();
 }
 
-function actualizarEtiquetaRango() {
-  const etiqueta = document.getElementById("filtroInfo");
+function actualizarEstadoCarga() {
+  const etiqueta = document.getElementById("dataStatusInfo");
   if (!etiqueta) return;
 
-  if (!filtroFechaInicio && !filtroFechaFin) {
-    etiqueta.textContent = "Mostrando solo últimos 2 días";
+  if (registrosFinalizados.length === 0) {
+    etiqueta.textContent = "Solo en proceso. Actualiza.";
     etiqueta.classList.remove("hidden");
-  } else {
-    etiqueta.classList.add("hidden");
+    return;
   }
+
+  const textoRango = (!filtroFechaInicio && !filtroFechaFin)
+    ? " (hoy)"
+    : "";
+
+  etiqueta.textContent = `Finalizados${textoRango}`;
+  etiqueta.classList.remove("hidden");
 }
 
 /* ========================= */
@@ -570,17 +574,23 @@ function aplicarFiltroFecha() {
   filtroFechaInicio = inicio ? new Date(inicio)              : null;
   filtroFechaFin    = fin    ? new Date(fin + "T23:59:59")   : null;
 
-  iniciarListenerTiempoReal();
+  registrosFinalizados = [];
+  registros = [...registrosActivos];
+  actualizarVistaAdmin();
 }
 
 function limpiarFiltroFecha() {
-  filtroFechaInicio = null;
-  filtroFechaFin    = null;
+  const hoy = new Date().toISOString().split("T")[0];
 
-  document.getElementById("fecha_inicio").value = "";
-  document.getElementById("fecha_fin").value    = "";
+  filtroFechaInicio = new Date(hoy);
+  filtroFechaFin    = new Date(hoy + "T23:59:59");
 
-  iniciarListenerTiempoReal();
+  document.getElementById("fecha_inicio").value = hoy;
+  document.getElementById("fecha_fin").value    = hoy;
+
+  registrosFinalizados = [];
+  registros = [...registrosActivos];
+  actualizarVistaAdmin();
 }
 
 /* ========================= */
