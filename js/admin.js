@@ -6,8 +6,10 @@ let registros        = [];
 let usuarios         = [];
 let filtroFechaInicio = null;
 let filtroFechaFin    = null;
-let unsubscribeListener = null;
-let unsubscribeUsuariosListener = null;
+let registrosActivos  = [];
+let registrosFinalizados = [];
+let unsubscribeListenerActivos = null;
+let unsubscribeListenerRango   = null;
 
 /* ========================= */
 /* INIT                       */
@@ -28,28 +30,61 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   iniciarListenerTiempoReal();
-  iniciarListenerUsuarios();
+  cargarUsuariosFirestore();
 });
 
 /* ========================= */
 /* LISTENER TIEMPO REAL        */
 /* ========================= */
 
-/**
- * Suscribe a Firestore con onSnapshot para actualizaciones en tiempo real.
- * Reemplaza el setInterval anterior.
- */
+function obtenerRangoConsulta() {
+  if (filtroFechaInicio && filtroFechaFin) {
+    return { inicio: filtroFechaInicio, fin: filtroFechaFin };
+  }
+
+  const hoy = new Date();
+  const haceDosDias = new Date(hoy);
+  haceDosDias.setDate(hoy.getDate() - 2);
+
+  return {
+    inicio: new Date(haceDosDias.getFullYear(), haceDosDias.getMonth(), haceDosDias.getDate(), 0, 0, 0, 0),
+    fin:    new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59, 999)
+  };
+}
+
 function iniciarListenerTiempoReal() {
-  if (unsubscribeListener) unsubscribeListener();
+  if (unsubscribeListenerActivos) unsubscribeListenerActivos();
+  if (unsubscribeListenerRango) unsubscribeListenerRango();
 
-  unsubscribeListener = db.collection("registros").onSnapshot(
+  const { inicio, fin } = obtenerRangoConsulta();
+  const inicioISO = inicio.toISOString();
+  const finISO    = fin.toISOString();
+
+  const queryFinalizados = db.collection("registros")
+    .where("status", "==", "Finalizado")
+    .where("fin", ">=", inicioISO)
+    .where("fin", "<=", finISO)
+    .orderBy("fin");
+
+  unsubscribeListenerRango = queryFinalizados.onSnapshot(
     snapshot => {
-      registros = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      registrosFinalizados = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      registros = [...registrosActivos, ...registrosFinalizados];
+      actualizarVistaAdmin();
+    },
+    err => {
+      console.error("Error en listener Firestore:", err);
+    }
+  );
 
-      calcularKPIs(registros);
-      llenarFiltros(registros);
-      filtrar();
-      actualizarUPH();
+  const queryActivos = db.collection("registros")
+    .where("status", "==", "En proceso");
+
+  unsubscribeListenerActivos = queryActivos.onSnapshot(
+    snapshot => {
+      registrosActivos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      registros = [...registrosActivos, ...registrosFinalizados];
+      actualizarVistaAdmin();
     },
     err => {
       console.error("Error en listener Firestore:", err);
@@ -57,18 +92,33 @@ function iniciarListenerTiempoReal() {
   );
 }
 
-function iniciarListenerUsuarios() {
-  if (unsubscribeUsuariosListener) unsubscribeUsuariosListener();
+async function cargarUsuariosFirestore() {
+  try {
+    usuarios = await obtenerUsuarios();
+    cargarUsuarios();
+  } catch (err) {
+    console.error("Error al cargar usuarios:", err);
+  }
+}
 
-  unsubscribeUsuariosListener = db.collection("usuarios").onSnapshot(
-    snapshot => {
-      usuarios = snapshot.docs.map(doc => doc.data());
-      cargarUsuarios();
-    },
-    err => {
-      console.error("Error en listener usuarios:", err);
-    }
-  );
+function actualizarVistaAdmin() {
+  calcularKPIs(registros);
+  llenarFiltros(registros);
+  filtrar();
+  actualizarUPH();
+  actualizarEtiquetaRango();
+}
+
+function actualizarEtiquetaRango() {
+  const etiqueta = document.getElementById("filtroInfo");
+  if (!etiqueta) return;
+
+  if (!filtroFechaInicio && !filtroFechaFin) {
+    etiqueta.textContent = "Mostrando solo últimos 2 días";
+    etiqueta.classList.remove("hidden");
+  } else {
+    etiqueta.classList.add("hidden");
+  }
 }
 
 /* ========================= */
@@ -465,8 +515,8 @@ async function crearUsuario() {
   const ok = await agregarUsuario({ username, nombre, turno });
   if (!ok) return;
 
+  await cargarUsuariosFirestore();
   limpiarFormularioUsuario();
-  // El listener de usuarios se actualizará automáticamente
 }
 
 function limpiarFormularioUsuario() {
@@ -506,7 +556,7 @@ async function eliminarUser(username) {
   if (!confirm("¿Eliminar usuario?")) return;
 
   await eliminarUsuario(username);
-  await cargarUsuarios();
+  await cargarUsuariosFirestore();
 }
 
 /* ========================= */
@@ -520,10 +570,7 @@ function aplicarFiltroFecha() {
   filtroFechaInicio = inicio ? new Date(inicio)              : null;
   filtroFechaFin    = fin    ? new Date(fin + "T23:59:59")   : null;
 
-  calcularKPIs(registros);
-  llenarFiltros(registros);
-  filtrar();
-  actualizarUPH();
+  iniciarListenerTiempoReal();
 }
 
 function limpiarFiltroFecha() {
@@ -533,10 +580,7 @@ function limpiarFiltroFecha() {
   document.getElementById("fecha_inicio").value = "";
   document.getElementById("fecha_fin").value    = "";
 
-  calcularKPIs(registros);
-  llenarFiltros(registros);
-  filtrar();
-  actualizarUPH();
+  iniciarListenerTiempoReal();
 }
 
 /* ========================= */

@@ -59,15 +59,19 @@ function mostrarApp(usuario) {
 function iniciarListenerRegistros() {
   if (unsubscribeRegistros) unsubscribeRegistros();
 
-  unsubscribeRegistros = db.collection("registros").onSnapshot(
-    snapshot => {
-      registrosCacheados = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      
-      cargarHistorial();
-      mostrarActividadActiva();
-    },
-    err => console.error("Error en listener registros:", err)
-  );
+  const usuario = JSON.parse(localStorage.getItem("usuario"));
+  if (!usuario) return;
+
+  unsubscribeRegistros = db.collection("registros")
+    .where("nombre", "==", usuario.nombre)
+    .onSnapshot(
+      snapshot => {
+        registrosCacheados = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        cargarHistorial();
+        mostrarActividadActiva();
+      },
+      err => console.error("Error en listener registros:", err)
+    );
 }
 
 function mostrarReloj() {
@@ -266,8 +270,14 @@ function cargarHistorial() {
 
   lista.innerHTML = "";
 
+  const hoy = new Date();
+
   registrosCacheados
-    .filter(r => r.nombre === usuario.nombre && r.status === "Finalizado")
+    .filter(r =>
+      r.nombre === usuario.nombre &&
+      r.status === "Finalizado" &&
+      esMismoDia(new Date(r.fin), hoy)
+    )
     .sort((a, b) => new Date(b.fin) - new Date(a.fin))
     .forEach(r => {
       const item = document.createElement("li");
@@ -275,6 +285,12 @@ function cargarHistorial() {
       item.textContent = `${icono} ${r.actividad} — ${r.cart} — ${r.cantidad} pcs`;
       lista.appendChild(item);
     });
+}
+
+function esMismoDia(fecha, referencia) {
+  return fecha.getFullYear() === referencia.getFullYear() &&
+         fecha.getMonth() === referencia.getMonth() &&
+         fecha.getDate() === referencia.getDate();
 }
 
 /* ========================= */
