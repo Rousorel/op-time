@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
     inputInicio.value = hoy;
     inputFin.value    = hoy;
 
-    filtroFechaInicio = new Date(hoy);
+    filtroFechaInicio = new Date(hoy + "T00:00:00");
     filtroFechaFin    = new Date(hoy + "T23:59:59");
   }
 
@@ -47,6 +47,7 @@ function obtenerRangoConsulta() {
     fin:    new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59, 999)
   };
 }
+
 
 async function iniciarListenerTiempoReal() {
   if (unsubscribeListenerActivos) unsubscribeListenerActivos();
@@ -571,8 +572,8 @@ function aplicarFiltroFecha() {
   const inicio = document.getElementById("fecha_inicio").value;
   const fin    = document.getElementById("fecha_fin").value;
 
-  filtroFechaInicio = inicio ? new Date(inicio)              : null;
-  filtroFechaFin    = fin    ? new Date(fin + "T23:59:59")   : null;
+  filtroFechaInicio = inicio ? new Date(inicio + "T00:00:00") : null;
+  filtroFechaFin    = fin    ? new Date(fin + "T23:59:59")    : null;
 
   registrosFinalizados = [];
   registros = [...registrosActivos];
@@ -582,7 +583,7 @@ function aplicarFiltroFecha() {
 function limpiarFiltroFecha() {
   const hoy = new Date().toISOString().split("T")[0];
 
-  filtroFechaInicio = new Date(hoy);
+  filtroFechaInicio = new Date(hoy + "T00:00:00");
   filtroFechaFin    = new Date(hoy + "T23:59:59");
 
   document.getElementById("fecha_inicio").value = hoy;
