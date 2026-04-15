@@ -10,6 +10,12 @@ let registrosActivos  = [];
 let registrosFinalizados = [];
 let unsubscribeListenerActivos = null;
 
+const ICON_CHAT = '<svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" role="img" aria-label="Comentario"><path stroke-linecap="round" stroke-linejoin="round" d="M3 20.25V6.375c0-.621.504-1.125 1.125-1.125h14.25c.621 0 1.125.504 1.125 1.125v10.5c0 .621-.504 1.125-1.125 1.125H9l-3.534 3.534A1.125 1.125 0 0 1 3 20.25Z" /></svg>';
+const ICON_PENCIL = '<svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a2.25 2.25 0 1 1 3.182 3.182L10.582 17.13a4.5 4.5 0 0 1-1.897 1.13L6 19l.74-2.685a4.5 4.5 0 0 1 1.13-1.897L16.862 4.487ZM19.5 7.125 16.875 4.5" /></svg>';
+const ICON_TRASH = '<svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>';
+const ICON_CHECK = '<svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>';
+const ICON_X = '<svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>';
+
 /* ========================= */
 /* INIT                       */
 /* ========================= */
@@ -206,10 +212,10 @@ function renderTabla(data) {
         <td>${tiempo}</td>
         <td>
           ${r.comentario
-            ? `<span title="${r.comentario}" class="btn-comentario">💬</span>`
+            ? `<span title="${r.comentario}" class="btn-comentario">${ICON_CHAT}</span>`
             : ""}
-          <button onclick="editarRegistro('${r.id}')" class="btn-edit">✏️</button>
-          <button onclick="eliminarRegistro('${r.id}')" class="btn-delete">🗑️</button>
+          <button onclick="editarRegistro('${r.id}')" class="btn-edit" aria-label="Editar registro">${ICON_PENCIL}</button>
+          <button onclick="eliminarRegistro('${r.id}')" class="btn-delete" aria-label="Eliminar registro">${ICON_TRASH}</button>
         </td>
       </tr>
     `;
@@ -326,8 +332,8 @@ function editarRegistro(id) {
     </td>
     <td>${calcularTiempo(r.inicio, r.fin)}</td>
     <td>
-      <button onclick="guardarEdicion('${id}')" class="btn-save">💾</button>
-      <button onclick="cancelarEdicion('${id}')" class="btn-cancel">❌</button>
+      <button onclick="guardarEdicion('${id}')" class="btn-save" aria-label="Guardar edicion">${ICON_CHECK}</button>
+      <button onclick="cancelarEdicion('${id}')" class="btn-cancel" aria-label="Cancelar edicion">${ICON_X}</button>
     </td>
   `;
 }
@@ -608,7 +614,7 @@ function cargarUsuarios() {
         <td>${u.nombre}</td>
         <td>${u.turno}</td>
         <td>
-          <button class="btn-delete-user" onclick="eliminarUser('${u.username}')">🗑️</button>
+          <button class="btn-delete-user" onclick="eliminarUser('${u.username}')" aria-label="Eliminar usuario">${ICON_TRASH}</button>
         </td>
       </tr>
     `;

@@ -5,6 +5,9 @@
 let registrosCacheados = [];
 let unsubscribeRegistros = null;
 
+const ICON_CHECK_OK = '<svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" role="img" aria-label="Finalizado con exito"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>';
+const ICON_X_ERROR = '<svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" role="img" aria-label="Finalizado con fallo"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>';
+
 window.onload = async function () {
   const usuario = JSON.parse(localStorage.getItem("usuario"));
 
@@ -222,7 +225,7 @@ async function confirmarFinalizacion() {
   document.getElementById("btnNo").disabled  = false;
   document.getElementById("btnConfirmar").classList.add("hidden");
 
-  document.getElementById("estado").innerText = "Actividad finalizada ✓";
+  document.getElementById("estado").innerHTML = `${ICON_CHECK_OK} Actividad finalizada`;
 
   limpiarCampos();
   await cargarHistorial();
@@ -281,8 +284,9 @@ function cargarHistorial() {
     .sort((a, b) => new Date(b.fin) - new Date(a.fin))
     .forEach(r => {
       const item = document.createElement("li");
-      const icono = r.exitoso === false ? "❌" : "✅";
-      item.textContent = `${icono} ${r.actividad} — ${r.cart} — ${r.cantidad} pcs`;
+      const icono = r.exitoso === false ? ICON_X_ERROR : ICON_CHECK_OK;
+      item.innerHTML = icono;
+      item.appendChild(document.createTextNode(` ${r.actividad} — ${r.cart} — ${r.cantidad} pcs`));
       lista.appendChild(item);
     });
 }

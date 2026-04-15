@@ -29,6 +29,19 @@
 
 * { box-sizing: border-box; }
 
+.icon {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.btn-icon-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 body {
   font-family: var(--font);
   background: var(--bg);

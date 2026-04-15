@@ -29,6 +29,19 @@
 
 * { box-sizing: border-box; }
 
+.icon {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.btn-icon-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 body {
   font-family: var(--font);
   background: var(--bg);
@@ -71,6 +84,11 @@ body {
   font-size: 40px;
   display: block;
   margin-bottom: 8px;
+}
+
+.login-logo .logo-icon .icon {
+  width: 40px;
+  height: 40px;
 }
 
 .login-logo h2 {
