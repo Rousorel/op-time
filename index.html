@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>VAS Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="container">
+
+  <!-- LOGIN -->
+  <div id="login" class="card">
+    <div class="login-logo">
+      <span class="logo-icon" aria-hidden="true">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5v10.125c0 1.036-.84 1.875-1.875 1.875H5.625a1.875 1.875 0 0 1-1.875-1.875V7.5m16.5 0-1.26-3.149A1.875 1.875 0 0 0 17.25 3H6.75a1.875 1.875 0 0 0-1.74 1.351L3.75 7.5m16.5 0h-16.5m3 4.5h10.5" />
+        </svg>
+      </span>
+      <h2>VAS Tracker</h2>
+      <p>Ingresa tu usuario para continuar</p>
+    </div>
+    <input
+      type="text"
+      id="username"
+      placeholder="Usuario"
+      autocomplete="off"
+      onkeypress="handleEnter(event)"
+      required
+    >
+    <button onclick="guardarNombre()" class="btnLogin">Continuar →</button>
+  </div>
+
+  <!-- APP -->
+  <div id="app" class="card" style="display:none;">
+
+    <!-- HEADER -->
+    <div class="header">
+      <h2 id="saludo"></h2>
+      <button class="logout" onclick="cerrarSesion()">Salir</button>
+    </div>
+
+    <!-- ACTIVIDAD EN CURSO -->
+    <div id="actividadActiva" class="actividad-activa hidden">
+      <h3>
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 1 1 15 0 7.5 7.5 0 0 1-15 0Zm7.5-3a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 2.25v1.5m0 16.5v1.5m9.75-9.75h-1.5m-16.5 0h-1.5m15.364-6.364-1.06 1.06M7.696 16.304l-1.06 1.06m10.607 0-1.06-1.06M7.696 7.696l-1.06-1.06" />
+        </svg>
+        Actividad en curso
+      </h3>
+      <p><strong>Actividad:</strong> <span id="act_tipo"></span></p>
+      <p><strong>Cart:</strong> <span id="act_cart"></span></p>
+      <p><strong>Cantidad:</strong> <span id="act_cantidad"></span></p>
+      <p><strong>Tiempo:</strong> <span id="act_timer">0s</span></p>
+    </div>
+
+    <!-- SELECCIÓN DE ACTIVIDAD -->
+    <div class="bloque">
+      <h3>Actividad</h3>
+      <select id="actividad" required>
+        <option value="">Seleccione...</option>
+        <option value="Consolidacion">Consolidacion</option>
+        <option value="VAS">VAS</option>
+        <option value="Empaque">Empaque</option>
+        <option value="etiquetado manual">Etiquetado Manual</option>
+        <option value="Decasing">Decasing</option>
+      </select>
+    </div>
+
+    <!-- DATOS -->
+    <div class="bloque">
+      <h3>Datos</h3>
+      <input
+        type="text"
+        id="cart"
+        placeholder="Cart / HU"
+        onkeypress="handleCartEnter(event)"
+        autocomplete="off"
+        required
+      >
+      <input
+        type="number"
+        id="cantidad"
+        placeholder="Cantidad"
+        onkeypress="handleCantidadEnter(event)"
+        min="1"
+        required
+      >
+    </div>
+
+    <!-- BOTONES -->
+    <div class="buttons">
+      <button id="btnInicio" onclick="iniciarActividad()"><span class="btn-icon-label"><svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" /></svg>Iniciar</span></button>
+      <button id="btnFin" onclick="finalizarActividad()" disabled><span class="btn-icon-label"><svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z" /></svg>Finalizar</span></button>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div class="bloque">
+      <h3>Actividades realizadas</h3>
+      <ul id="historial"></ul>
+    </div>
+
+    <!-- ESTADO -->
+    <p id="estado"></p>
+
+  </div>
+
+  <!-- MODAL -->
+  <div id="modalFinalizacion" class="modal hidden">
+    <div class="modal-content">
+      <h3>¿Se finalizó con éxito?</h3>
+      <p id="modalMensaje"></p>
+
+      <div id="comentarioContainer" class="comentario-container hidden">
+        <label>Comentario (opcional):</label>
+        <textarea id="comentarioExitoso" placeholder="Ingrese un comentario..." rows="3"></textarea>
+      </div>
+
+      <div id="comentarioContainerFallo" class="comentario-container hidden">
+        <label>Comentario (requerido):</label>
+        <textarea id="comentarioFallo" placeholder="Describa qué incidencia ocurrió..." rows="3"></textarea>
+      </div>
+
+      <div class="modal-buttons">
+        <button id="btnSi"       onclick="responderFinalizacion(true)"  class="btn-si"><span class="btn-icon-label"><svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>Sí</span></button>
+        <button id="btnNo"       onclick="responderFinalizacion(false)" class="btn-no"><span class="btn-icon-label"><svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>No</span></button>
+        <button id="btnConfirmar" onclick="confirmarFinalizacion()"     class="btn-confirmar hidden">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Firebase SDK (compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<!-- App scripts -->
+<script src="js/firebase-config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/usuarios.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
