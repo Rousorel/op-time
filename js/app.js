@@ -129,6 +129,7 @@ async function iniciarActividad() {
 
   localStorage.setItem("actividadActualId", nueva.id);
   document.getElementById("estado").innerText = "Actividad en proceso...";
+  limpiarCampos();
 }
 
 /* ========================= */
